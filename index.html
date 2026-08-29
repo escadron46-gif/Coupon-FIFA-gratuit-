@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Espace Coupons</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0b1020;
+      color: white;
+      min-height: 100vh;
+    }
+
+    .page {
+      display: none;
+      min-height: 100vh;
+      padding: 25px 18px 100px;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      margin: auto;
+    }
+
+    .hero {
+      text-align: center;
+      padding-top: 35px;
+    }
+
+    .hero h1 {
+      font-size: 29px;
+      line-height: 1.2;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      color: #bfc5d6;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    .bookmaker-card {
+      background: #151c31;
+      border: 1px solid #28314b;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 18px;
+      text-align: center;
+      transition: 0.25s;
+    }
+
+    .bookmaker-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .bookmaker-card img {
+      width: 100%;
+      max-width: 270px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: white;
+    }
+
+    .bookmaker-name {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .input-box {
+      margin-top: 25px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      background: #151c31;
+      color: white;
+      border: 1px solid #36405d;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #4d8dff;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .main-btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 17px;
+      margin-top: 18px;
+      background: #1769ff;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-btn:active {
+      transform: scale(0.98);
+    }
+
+    .main-btn:disabled {
+      opacity: 0.6;
+    }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+
+    .success {
+      color: #42e68a;
+      margin-top: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    /* BARRE DES LOGOS */
+    .logo-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(10, 15, 30, 0.97);
+      border-top: 1px solid #29334d;
+      padding: 9px 8px;
+      display: none;
+    }
+
+    .logo-bar-content {
+      max-width: 520px;
+      margin: auto;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .mini-logo {
+      width: 31%;
+      height: 48px;
+      border-radius: 9px;
+      object-fit: contain;
+      background: white;
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    /* PAGE 2 */
+    .selected-logo {
+      display: block;
+      width: 100%;
+      max-width: 280px;
+      height: 100px;
+      object-fit: contain;
+      background: white;
+      border-radius: 14px;
+      margin: 0 auto 25px;
+    }
+
+    .info-card {
+      background: #151c31;
+      border: 1px solid #29334d;
+      border-radius: 20px;
+      padding: 25px 20px;
+      margin-top: 25px;
+    }
+
+    .info-card h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .info-card p {
+      color: #d0d5e2;
+      line-height: 1.6;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .warning {
+      background: #222a3e;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+      color: #ffd76a;
+      line-height: 1.5;
+    }
+
+    .back-btn {
+      background: transparent;
+      border: 1px solid #3a4562;
+      color: white;
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    /* PAGE 3 */
+    .coupon {
+      background: #151c31;
+      border: 1px solid #303b59;
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 25px;
+    }
+
+    .coupon-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .coupon-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 14px 0;
+      border-bottom: 1px solid #29334d;
+    }
+
+    .coupon-row:last-child {
+      border-bottom: none;
+    }
+
+    .coupon-label {
+      color: #929bb1;
+    }
+
+    .coupon-value {
+      font-weight: bold;
+      text-align: right;
+    }
+
+    /* PAGE 4 */
+    .thank-you {
+      text-align: center;
+      padding-top: 70px;
+    }
+
+    .thank-you .heart {
+      font-size: 55px;
+      margin-bottom: 15px;
+    }
+
+    .thank-you h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .thank-you p {
+      color: #bfc5d6;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    .message-box {
+      text-align: left;
+    }
+
+    .footer-note {
+      color: #737d96;
+      text-align: center;
+      font-size: 12px;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========================= -->
+  <!-- PAGE 1 -->
+  <!-- ========================= -->
+
+  <section id="page1" class="page active">
+    <div class="container">
+
+      <div class="hero">
+
+        <h1>
+          BIENVENUE SUR VOTRE<br>
+          ESPACE COUPONS
+        </h1>
+
+        <p>
+          Découvrez notre espace dédié aux coupons
+          1XBET, BETCLIC et BETMOMO.
+        </p>
+
+      </div>
+
+      <!-- 1XBET -->
+      <div class="bookmaker-card">
+        <img src="1xbet.png" alt="Logo 1XBET">
+        <div class="bookmaker-name">1XBET</div>
+      </div>
+
+      <!-- BETCLIC -->
+      <div class="bookmaker-card">
+        <img src="betclic.png" alt="Logo BETCLIC">
+        <div class="bookmaker-name">BETCLIC</div>
+      </div>
+
+      <!-- BETMOMO -->
+      <div class="bookmaker-card">
+        <img src="betmomo.jpg" alt="Logo BETMOMO">
+        <div class="bookmaker-name">BETMOMO</div>
+      </div>
+
+      <div class="input-box">
+
+        <input
+          type="text"
+          id="bookmakerInput"
+          placeholder="Écrivez le nom du bookmaker choisi"
+          autocomplete="off"
+        >
+
+        <div id="errorPage1" class="error"></div>
+
+        <button
+          id="continuePage1"
+          class="main-btn"
+          onclick="selectBookmaker()"
+        >
+          CONTINUER
+        </button>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- PAGE 2 -->
+  <!-- ========================= -->
+
+  <section id="page2" class="page">
+
+    <div class="container">
+
+      <button class="back-btn" onclick="showPage(1)">
+        ← Retour
+      </button>
+
+      <img
+        id="selectedLogo"
+        class="selected-logo"
+        src=""
+        alt="Bookmaker sélectionné"
+      >
+
+      <div class="info-card">
+
+        <h2>
+          ACCÉDEZ À VOTRE COUPON
+        </h2>
+
+        <p>
+          Pour accéder au coupon, votre compte sur
+          le bookmaker sélectionné doit avoir été
+          rechargé d'au moins <strong>1 000 FCFA</strong>.
+        </p>
+
+        <p>
+          Une fois cette condition remplie, vous pouvez
+          continuer pour accéder aux informations du coupon.
+        </p>
+
+        <div class="warning">
+          ⚠️ Le site ne traite aucun paiement et ne vérifie
+          pas directement votre solde ou votre recharge.
+        </div>
+
+        <button
+          class="main-btn"
+          onclick="showPage(3)"
+        >
+          CONTINUER
+        </button>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- PAGE 3 -->
+  <!-- ========================= -->
+
+  <section id="page3" class="page">
+
+    <div class="container">
+
+      <button class="back-btn" onclick="showPage(2)">
+        ← Retour
+      </button>
+
+      <img
+        id="couponLogo"
+        class="selected-logo"
+        src=""
+        alt="Bookmaker"
+      >
+
+      <div class="coupon">
+
+        <div class="coupon-title">
+          VOTRE COUPON
+        </div>
+
+        <div class="coupon-row">
+          <span class="coupon-label">Bookmaker</span>
+          <span id="couponBookmaker" class="coupon-value">
+            -
+          </span>
+        </div>
+
+        <div class="coupon-row">
+          <span class="coupon-label">Match</span>
+          <span class="coupon-value">
+            Équipe A - Équipe B
+          </span>
+        </div>
+
+        <div class="coupon-row">
+          <span class="coupon-label">Type de pari</span>
+          <span class="coupon-value">
+            À modifier
+          </span>
+        </div>
+
+        <div class="coupon-row">
+          <span class="coupon-label">Cote</span>
+          <span class="coupon-value">
+            2.00
+          </span>
+        </div>
+
+        <div class="coupon-row">
+          <span class="coupon-label">Date</span>
+          <span class="coupon-value">
+            À modifier
+          </span>
+        </div>
+
+        <button
+          class="main-btn"
+          onclick="showPage(4)"
+        >
+          CONTINUER
+        </button>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- PAGE 4 -->
+  <!-- ========================= -->
+
+  <section id="page4" class="page">
+
+    <div class="container">
+
+      <button class="back-btn" onclick="showPage(3)">
+        ← Retour
+      </button>
+
+      <div class="thank-you">
+
+        <div class="heart">
+          ❤️
+        </div>
+
+        <h1>
+          MERCI !
+        </h1>
+
+        <p>
+          Merci d'avoir utilisé notre espace coupons.
+          Vous pouvez laisser un message de remerciement
+          ci-dessous.
+        </p>
+
+        <div class="message-box">
+
+          <textarea
+            id="thankMessage"
+            placeholder="Écrivez votre message de remerciement..."
+          ></textarea>
+
+          <div id="errorPage4" class="error"></div>
+
+          <button
+            id="sendMessageBtn"
+            class="main-btn"
+            onclick="sendThankYouMessage()"
+          >
+            ENVOYER LE MESSAGE
+          </button>
+
+          <div id="successPage4" class="success"></div>
+
+        </div>
+
+      </div>
+
+      <div class="footer-note">
+        Votre message sera transmis à notre espace de support.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- BARRE DES 3 LOGOS -->
+  <!-- ========================= -->
+
+  <div id="logoBar" class="logo-bar">
+
+    <div class="logo-bar-content">
+
+      <img
+        src="1xbet.png"
+        class="mini-logo"
+        alt="1XBET"
+        onclick="changeBookmaker('1XBET')"
+      >
+
+      <img
+        src="betclic.png"
+        class="mini-logo"
+        alt="BETCLIC"
+        onclick="changeBookmaker('BETCLIC')"
+      >
+
+      <img
+        src="betmomo.jpg"
+        class="mini-logo"
+        alt="BETMOMO"
+        onclick="changeBookmaker('BETMOMO')"
+      >
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /* ==================================================
+       CONFIGURATION SUPABASE
+       ================================================== */
+
+    const SUPABASE_URL =
+      "https://thdzibcychxpzoylatmr.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+      "sb_publishable_l0-KT2800OcijbAalZC-zQ_TLLm7OaQ";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+
+    /* ==================================================
+       VARIABLES
+       ================================================== */
+
+    let selectedBookmaker = "";
+
+
+    const logos = {
+
+      "1XBET": "1xbet.png",
+
+      "BETCLIC": "betclic.png",
+
+      "BETMOMO": "betmomo.jpg"
+
+    };
+
+
+    /* ==================================================
+       NORMALISATION DU NOM
+       ================================================== */
+
+    function normalizeBookmaker(value) {
+
+      return value
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+    }
+
+
+    /* ==================================================
+       PAGE 1
+       ================================================== */
+
+    async function selectBookmaker() {
+
+      const input =
+        document.getElementById("bookmakerInput");
+
+      const error =
+        document.getElementById("errorPage1");
+
+      const button =
+        document.getElementById("continuePage1");
+
+      const bookmaker =
+        normalizeBookmaker(input.value);
+
+
+      error.style.display = "none";
+
+
+      if (!bookmaker) {
+
+        error.textContent =
+          "Veuillez écrire le nom du bookmaker choisi.";
+
+        error.style.display = "block";
+
+        return;
+      }
+
+
+      if (
+        bookmaker !== "1XBET" &&
+        bookmaker !== "BETCLIC" &&
+        bookmaker !== "BETMOMO"
+      ) {
+
+        error.textContent =
+          "Veuillez choisir entre 1XBET, BETCLIC ou BETMOMO.";
+
+        error.style.display = "block";
+
+        return;
+      }
+
+
+      button.disabled = true;
+
+      button.textContent = "ENVOI EN COURS...";
+
+
+      try {
+
+        /*
+          PREMIER MESSAGE :
+
+          Le nom du bookmaker est envoyé
+          dans la colonne "message".
+        */
+
+        const { error: insertError } =
+          await supabaseClient
+            .from("support_messages")
+            .insert([
+              {
+                message: bookmaker
+              }
+            ]);
+
+
+        if (insertError) {
+
+          console.error(insertError);
+
+          error.textContent =
+            "Impossible d'enregistrer votre choix. Veuillez réessayer.";
+
+          error.style.display = "block";
+
+          button.disabled = false;
+
+          button.textContent = "CONTINUER";
+
+          return;
+        }
+
+
+        selectedBookmaker = bookmaker;
+
+        updateSelectedBookmaker();
+
+        showPage(2);
+
+
+      } catch (e) {
+
+        console.error(e);
+
+        error.textContent =
+          "Une erreur est survenue. Veuillez réessayer.";
+
+        error.style.display = "block";
+
+      }
+
+
+      button.disabled = false;
+
+      button.textContent = "CONTINUER";
+
+    }
+
+
+    /* ==================================================
+       CHANGER DE BOOKMAKER
+       ================================================== */
+
+    function changeBookmaker(bookmaker) {
+
+      selectedBookmaker = bookmaker;
+
+      updateSelectedBookmaker();
+
+      showPage(2);
+
+    }
+
+
+    /* ==================================================
+       ACTUALISER LE BOOKMAKER
+       ================================================== */
+
+    function updateSelectedBookmaker() {
+
+      const logo =
+        logos[selectedBookmaker];
+
+
+      document.getElementById("selectedLogo").src =
+        logo;
+
+
+      document.getElementById("couponLogo").src =
+        logo;
+
+
+      document.getElementById("couponBookmaker").textContent =
+        selectedBookmaker;
+
+    }
+
+
+    /* ==================================================
+       NAVIGATION
+       ================================================== */
+
+    function showPage(number) {
+
+      const pages =
+        document.querySelectorAll(".page");
+
+
+      pages.forEach(function(page) {
+
+        page.classList.remove("active");
+
+      });
+
+
+      const selectedPage =
+        document.getElementById("page" + number);
+
+      if (selectedPage) {
+
+        selectedPage.classList.add("active");
+
+      }
+
+
+      /*
+        La barre des logos apparaît
+        à partir de la page 2.
+      */
+
+      const logoBar =
+        document.getElementById("logoBar");
+
+
+      if (number >= 2) {
+
+        logoBar.style.display = "block";
+
+      } else {
+
+        logoBar.style.display = "none";
+
+      }
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+    }
+
+
+    /* ==================================================
+       PAGE 4 — MESSAGE DE REMERCIEMENT
+       ================================================== */
+
+    async function sendThankYouMessage() {
+
+      const textarea =
+        document.getElementById("thankMessage");
+
+      const error =
+        document.getElementById("errorPage4");
+
+      const success =
+        document.getElementById("successPage4");
+
+      const button =
+        document.getElementById("sendMessageBtn");
+
+
+      const message =
+        textarea.value.trim();
+
+
+      error.style.display = "none";
+
+      success.style.display = "none";
+
+
+      if (!message) {
+
+        error.textContent =
+          "Veuillez écrire votre message avant de l'envoyer.";
+
+        error.style.display = "block";
+
+        return;
+      }
+
+
+      button.disabled = true;
+
+      button.textContent = "ENVOI EN COURS...";
+
+
+      try {
+
+        /*
+          DEUXIÈME MESSAGE :
+
+          Le message de remerciement est envoyé
+          dans la colonne "pseudo_tiktok".
+        */
+
+        const { error: insertError } =
+          await supabaseClient
+            .from("support_messages")
+            .insert([
+              {
+                pseudo_tiktok: message
+              }
+            ]);
+
+
+        if (insertError) {
+
+          console.error(insertError);
+
+          error.textContent =
+            "Impossible d'envoyer le message. Veuillez réessayer.";
+
+          error.style.display = "block";
+
+          button.disabled = false;
+
+          button.textContent =
+            "ENVOYER LE MESSAGE";
+
+          return;
+        }
+
+
+        success.textContent =
+          "Message envoyé avec succès ❤️";
+
+        success.style.display = "block";
+
+
+        textarea.value = "";
+
+
+        button.textContent =
+          "MESSAGE ENVOYÉ";
+
+
+      } catch (e) {
+
+        console.error(e);
+
+        error.textContent =
+          "Une erreur est survenue. Veuillez réessayer.";
+
+        error.style.display = "block";
+
+        button.disabled = false;
+
+        button.textContent =
+          "ENVOYER LE MESSAGE";
+
+      }
+
+    }
+
+  </script>
+
+</body>
+</html>
