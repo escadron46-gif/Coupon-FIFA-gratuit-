@@ -751,16 +751,16 @@
 
         showPage(2);
 
+} catch (e) {
 
-      } catch (e) {
+  console.error("ERREUR SUPABASE :", e);
 
-        console.error(e);
+  error.textContent =
+    "Erreur : " + (e.message || e);
 
-        error.textContent =
-          "Une erreur est survenue. Veuillez réessayer.";
+  error.style.display = "block";
 
-        error.style.display = "block";
-
+}
       }
 
 
@@ -930,20 +930,20 @@
 
         if (insertError) {
 
-          console.error(insertError);
+  console.error("ERREUR SUPABASE :", insertError);
 
-          error.textContent =
-            "Impossible d'envoyer le message. Veuillez réessayer.";
+  error.textContent =
+    "Supabase : " +
+    (insertError.message || "erreur inconnue");
 
-          error.style.display = "block";
+  error.style.display = "block";
 
-          button.disabled = false;
+  button.disabled = false;
 
-          button.textContent =
-            "ENVOYER LE MESSAGE";
+  button.textContent = "CONTINUER";
 
-          return;
-        }
+  return;
+}
 
 
         success.textContent =
